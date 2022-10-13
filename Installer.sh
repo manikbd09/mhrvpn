@@ -494,6 +494,7 @@ WantedBy=multi-user.target" >> /etc/systemd/system/firenet.service
 iptables-restore < /etc/iptables_rules.v4
 ip6tables-restore < /etc/iptables_rules.v6
 sysctl -p
+ufw disable
 service stunnel4 restart
 systemctl restart openvpn@server.service
 systemctl restart openvpn@server2.service
