@@ -4,6 +4,8 @@ HOST='174.138.187.18';
 USER='mrtunnel_mhrbro';
 PASS='mrtunnel_mhrbro';
 DBNAME='mrtunnel_mhrbro';
+PORT_TCP='1194';
+PORT_UDP='53';
 timedatectl set-timezone Asia/Riyadh
 install_require () {
 clear
@@ -113,7 +115,7 @@ sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 echo '# Openvpn Configuration by Firenet Philippines :)
 dev tun
-port 53
+port PORT_UDP
 proto udp
 topology subnet
 server 10.30.0.0 255.255.252.0
@@ -160,7 +162,7 @@ sed -i "s|PORT_UDP|$PORT_UDP|g" /etc/openvpn/server.conf
 
 echo '# Openvpn Configuration by Firenet Philippines :)
 dev tun
-port 1194
+port PORT_TCP
 proto tcp
 topology subnet
 server 10.20.0.0 255.255.252.0
@@ -444,10 +446,10 @@ echo "debug = 0
 output = /tmp/stunnel.log
 cert = /etc/stunnel/stunnel.pem
 [openvpn-tcp]
-connect = 1194  
+connect = PORT_TCP  
 accept = 443 
 [openvpn-udp]
-connect = 53
+connect = PORT_UDP
 accept = 444
 " >> stunnel.conf
 
