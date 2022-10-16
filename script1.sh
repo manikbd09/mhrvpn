@@ -1,3 +1,9 @@
+#!/bin/bash
+#Database Details
+HOST='174.138.187.18';
+USER='mrtunnel_mhrbro';
+PASS='mrtunnel_mhrbro';
+DBNAME='mrtunnel_mhrbro';
 timedatectl set-timezone Asia/Riyadh
 install_require () {
 clear
