@@ -113,7 +113,7 @@ sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 echo '# Openvpn Configuration by Firenet Philippines :)
 dev tun
-port PORT_UDP
+port 53
 proto udp
 topology subnet
 server 10.30.0.0 255.255.252.0
@@ -160,7 +160,7 @@ sed -i "s|PORT_UDP|$PORT_UDP|g" /etc/openvpn/server.conf
 
 echo '# Openvpn Configuration by Firenet Philippines :)
 dev tun
-port PORT_TCP
+port 1194
 proto tcp
 topology subnet
 server 10.20.0.0 255.255.252.0
@@ -444,10 +444,10 @@ echo "debug = 0
 output = /tmp/stunnel.log
 cert = /etc/stunnel/stunnel.pem
 [openvpn-tcp]
-connect = PORT_TCP  
+connect = 1194  
 accept = 443 
 [openvpn-udp]
-connect = PORT_UDP
+connect = 53
 accept = 444
 " >> stunnel.conf
 
