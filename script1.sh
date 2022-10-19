@@ -1,9 +1,9 @@
 #!/bin/bash
 #Database Details
-HOST='174.138.187.18';
-USER='mrtunnel_mhrbro';
-PASS='mrtunnel_mhrbro';
-DBNAME='mrtunnel_mhrbro';
+HOST='185.250.107.153';
+USER='mhrbro_goman';
+PASS='mhrbro_goman';
+DBNAME='mhrbro_goman';
 PORT_TCP='1194';
 PORT_UDP='53';
 timedatectl set-timezone Asia/Riyadh
